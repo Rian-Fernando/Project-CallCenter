@@ -1,0 +1,37 @@
+# --- Secrets: never commit ---
+.env
+.env.local
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# --- Node ---
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# --- Runtime data (regenerable) ---
+data/qdrant/
+data/cache/
+data/audio/
+data/models/
+*.db
+*.db-journal
+*.sqlite3
+
+# --- Crawler output: fetched Village pages are re-fetchable ---
+knowledge/_crawled/
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/

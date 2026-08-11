@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Village of Garden City — design tokens
+
+   A municipal government aesthetic: restrained, high-contrast, accessible.
+   The palette is a deep institutional navy with a single warm accent used
+   sparingly for live/recording state. Nothing decorative competes with the
+   information.
+   ========================================================================== */
+
+@theme {
+  --color-village-50:  #f0f5fb;
+  --color-village-100: #dde8f5;
+  --color-village-200: #c2d6ec;
+  --color-village-300: #97bade;
+  --color-village-400: #6598cc;
+  --color-village-500: #427ab8;
+  --color-village-600: #31609b;
+  --color-village-700: #2a4e7e;
+  --color-village-800: #274369;
+  --color-village-900: #1e3a5f;
+  --color-village-950: #16253c;
+
+  --color-accent-400: #e0a63c;
+  --color-accent-500: #c98a1f;
+  --color-accent-600: #a76d15;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Respect the OS reduced-motion setting — the pulsing call orb is the main
+   animation and can be uncomfortable for some users. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keyboard focus must always be visible: this is a government service. */
+:focus-visible {
+  outline: 3px solid var(--color-village-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+@keyframes ring-expand {
+  0%   { transform: scale(0.85); opacity: 0.55; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+@keyframes bar-bounce {
+  0%, 100% { transform: scaleY(0.35); }
+  50%      { transform: scaleY(1); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dot-blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40%           { opacity: 1; }
+}
+
+.animate-orb-pulse  { animation: orb-pulse 2.4s ease-in-out infinite; }
+.animate-ring       { animation: ring-expand 2.4s ease-out infinite; }
+.animate-fade-up    { animation: fade-up 0.28s ease-out both; }
+
+.eq-bar { animation: bar-bounce 0.9s ease-in-out infinite; transform-origin: center; }
+.typing-dot { animation: dot-blink 1.3s ease-in-out infinite; }
+
+/* Subtle scrollbars so transcript panes don't look heavy. */
+.thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 999px;
+}

@@ -1,0 +1,204 @@
+# =============================================================================
+# Department taxonomy and deterministic routing rules
+# =============================================================================
+# This file drives BOTH the department list and the fast rule-based router.
+#
+# HOW ROUTING WORKS (§9):
+#   1. Deterministic keyword/phrase rules run first — they are instant, free,
+#      auditable, and handle the majority of real municipal calls.
+#   2. The LLM only runs when the rules are ambiguous (no match, or two
+#      departments tie). This keeps voice latency low and behavior explainable.
+#
+# IMPORTANT — CONTACT INFORMATION:
+#   `phone` and `email` are intentionally left null. Do NOT populate them with
+#   guessed values. Fill them in only from the official Village directory at
+#   https://www.gardencityny.net. The UI renders "see Village directory" while
+#   these are null, which is correct behavior for an unverified prototype.
+# =============================================================================
+
+departments:
+  - id: general
+    name: General Village Information
+    description: >-
+      Village Hall hours, general contact information, meetings, questions that
+      span multiple departments, or anything not clearly owned elsewhere.
+    phone: null
+    email: null
+    name_keywords: [village hall, village of garden city, general information]
+    keywords: [village hall, hours, open, closed, holiday, mayor, trustee,
+               board of trustees, meeting, agenda, minutes, contact, directory,
+               who do i call, general question, information]
+    weight: 0.6   # deliberately low: `general` is the fallback, not a magnet
+
+  - id: public_works
+    name: Public Works
+    description: >-
+      Streets, roads, potholes, snow removal, street lights, traffic signs,
+      trees, sidewalks, storm drains, sewers, water mains, village vehicles.
+    phone: null
+    email: null
+    name_keywords: [public works, department of public works, dpw, highway division, engineering division, street lighting, municipal service yard, central garage, water and sewer, water sewer]
+    keywords: [pothole, road, street, pavement, repave, asphalt, snow, plow,
+               plowing, ice, salt, street light, streetlight, traffic sign,
+               stop sign, tree, branch, limb, fallen tree, stump, sidewalk,
+               curb, storm drain, drainage, flooding, sewer, water main,
+               hydrant, manhole, catch basin]
+    weight: 1.0
+
+  - id: recreation
+    name: Recreation
+    description: >-
+      Parks, pool, tennis courts, athletic fields, community programs, camps,
+      senior activities, facility reservations, recreation memberships.
+    phone: null
+    email: null
+    name_keywords: [recreation, recreation and parks, recreation parks, cultural and recreational affairs, senior center, garden city pool]
+    # NOTE: "court" alone is deliberately excluded — it collides with Justice
+    # Court. Use the specific phrase "tennis court" instead.
+    keywords: [park, playground, pool, swimming, tennis, tennis court, field,
+               athletic, sports, program, camp, summer camp, class,
+               senior center, recreation, rec center, reserve, reservation,
+               rental, membership, pavilion, gazebo, community center,
+               ice rink, skating]
+    weight: 1.0
+
+  - id: building
+    name: Building Department
+    description: >-
+      Construction permits, inspections, certificates of occupancy, zoning,
+      variances, code enforcement, fences, sheds, decks, pools, additions.
+    phone: null
+    email: null
+    name_keywords: [building department, building dept, building division, zoning board of appeals, planning commission, architectural design review, code enforcement]
+    keywords: [building permit, construction, contractor, inspection, inspector,
+               certificate of occupancy, c of o, zoning, variance, setback,
+               code enforcement, violation, fence, shed, deck, patio, addition,
+               renovation, remodel, demolition, swimming pool permit, generator,
+               solar panel, driveway, retaining wall, architectural review]
+    weight: 1.0
+
+  - id: village_clerk
+    name: Village Clerk
+    description: >-
+      Vital records, licenses, FOIL/public records requests, voter registration,
+      local laws, official documents, notary, village elections.
+    phone: null
+    email: null
+    name_keywords: [village clerk, clerk's office, clerks office, administrator village clerk, business clerk, records access]
+    keywords: [clerk, birth certificate, death certificate, marriage license,
+               vital record, notary, foil, freedom of information, public record,
+               records request, local law, ordinance, code book, election,
+               voter, voting, register to vote, dog license, official document]
+    weight: 1.0
+
+  - id: finance
+    name: Finance
+    description: >-
+      Property taxes, water bills, village invoices, payments, assessments,
+      budget documents, refunds.
+    phone: null
+    email: null
+    name_keywords: [finance department, finance dept, village treasurer, tax and water bills, assessment roll, village budget]
+    keywords: [tax, taxes, property tax, tax bill, assessment, assessed value,
+               water bill, sewer bill, invoice, payment, pay my, pay online,
+               billing, receipt, refund, budget, finance, treasurer, escrow,
+               late fee, penalty, due date]
+    weight: 1.0
+
+  - id: sanitation
+    name: Sanitation
+    description: >-
+      Garbage and refuse collection, recycling, yard waste, bulk pickup,
+      collection schedules, missed pickups, containers.
+    phone: null
+    email: null
+    name_keywords: [sanitation, sanitation division, recycling, refuse collection]
+    keywords: [garbage, trash, refuse, rubbish, waste, pickup, pick up,
+               collection, collected, recycle, recycling, bin, container, can,
+               yard waste, leaves, leaf, grass clippings, brush, bulk, bulky,
+               large item, appliance, mattress, missed pickup, compost,
+               dumpster, sanitation]
+    weight: 1.0
+
+  - id: parking
+    name: Parking
+    description: >-
+      Parking permits, meters, parking fields and lots, commuter parking,
+      parking tickets and violations, overnight parking rules.
+    phone: null
+    email: null
+    name_keywords: [parking, parking permit, parking field, railroad parking]
+    keywords: [parking, park my car, permit parking, parking permit, meter,
+               parking meter, parking lot, parking field, commuter, station
+               parking, train station parking, parking ticket, citation,
+               summons, overnight parking, handicap parking, loading zone,
+               tow, towed, valet]
+    weight: 1.0
+
+  - id: permits
+    name: Permits
+    description: >-
+      Non-construction permits: block parties, street closures, film shoots,
+      special events, dumpster and pod placement, tag sales, peddler licenses.
+    phone: null
+    email: null
+    name_keywords: [special event permit, block party permit, peddler license]
+    keywords: [permit, special event, block party, street closure, road closure,
+               parade, festival, film permit, filming, tag sale, garage sale,
+               yard sale, peddler, solicitor, vendor license, pod, dumpster
+               permit, banner, tent permit, fireworks, temporary sign]
+    weight: 0.9   # slightly below building/others: "permit" is a common word
+
+# -----------------------------------------------------------------------------
+# Disambiguation rules
+# -----------------------------------------------------------------------------
+# Multi-word phrases that must override single-keyword matches, because the
+# obvious keyword points at the wrong department.
+overrides:
+  - phrase: "building permit"
+    department: building
+  - phrase: "permit to build"
+    department: building
+  - phrase: "pool permit"
+    department: building
+  - phrase: "fence permit"
+    department: building
+  - phrase: "shed permit"
+    department: building
+  - phrase: "parking permit"
+    department: parking
+  - phrase: "parking ticket"
+    department: parking
+  - phrase: "dumpster permit"
+    department: permits
+  - phrase: "block party"
+    department: permits
+  - phrase: "tag sale"
+    department: permits
+  - phrase: "water bill"
+    department: finance
+  - phrase: "sewer bill"
+    department: finance
+  - phrase: "water main"
+    department: public_works
+  - phrase: "dog license"
+    department: village_clerk
+  - phrase: "marriage license"
+    department: village_clerk
+  - phrase: "bulk pickup"
+    department: sanitation
+  - phrase: "missed pickup"
+    department: sanitation
+  - phrase: "pool hours"
+    department: recreation
+  - phrase: "pool membership"
+    department: recreation
+  # "Justice Court" is a court of law, not a tennis court.
+  - phrase: "justice court"
+    department: general
+  - phrase: "traffic ticket"
+    department: general
+  - phrase: "court date"
+    department: general
+  - phrase: "court appearance"
+    department: general

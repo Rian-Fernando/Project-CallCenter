@@ -1,0 +1,145 @@
+# =============================================================================
+# Confidence & safety configuration  (§10, §32)
+# =============================================================================
+# CORE PRINCIPLE
+#   We never ask the model "how confident are you?" and act on the answer.
+#   Language models are systematically overconfident about municipal facts they
+#   have never seen. (Measured on this exact stack: qwen3:8b self-reported
+#   confidence 1.0 on a routing task where it had no grounds for certainty.)
+#
+#   Instead we compute confidence from SIX INDEPENDENT SIGNALS, most of which
+#   the model cannot influence at all. Retrieval scores come from the vector
+#   store; document counts come from the corpus; policy hits come from this
+#   file. Only `grounding` involves the LLM, and there it acts as a critic of
+#   text it has already produced — a task models are far more reliable at than
+#   introspecting their own certainty.
+#
+# HOW THE SCORE IS USED
+#   score >= high    -> answer directly, with citations
+#   score >= medium  -> ask ONE clarifying question
+#   score <  medium  -> refuse to guess, escalate to a human department
+#
+# Thresholds live in .env (CONFIDENCE_HIGH / CONFIDENCE_MEDIUM) so they can be
+# tuned per-deployment without editing this file.
+# =============================================================================
+
+weights:
+  # Cosine similarity of the single best-matching chunk.
+  # The primary "is there anything relevant at all?" signal.
+  top_score: 0.30
+
+  # Gap between the best chunk and the 3rd-best.
+  # A large margin means the corpus has one clear answer. A flat distribution
+  # means we matched a topic but not a specific fact — a classic hallucination
+  # setup, so it drags the score down.
+  score_margin: 0.15
+
+  # How many chunks cleared RAG_MIN_SCORE. Corroboration across several
+  # documents is stronger evidence than a single lucky match.
+  support_count: 0.15
+
+  # Do the retrieved documents actually belong to the department the router
+  # chose? Disagreement means either the router or the retrieval is wrong,
+  # and we should not answer confidently while they conflict.
+  department_agreement: 0.10
+
+  # A second LLM pass that reads the drafted answer against the retrieved
+  # excerpts and rules on each claim: supported, or not. This is the strongest
+  # anti-fabrication signal, so it carries the most weight.
+  grounding: 0.30
+
+# --- Signal calibration -------------------------------------------------------
+signals:
+  top_score:
+    # Cosine scores below `floor` contribute nothing; at/above `ceiling` they
+    # contribute fully. Linear in between.
+    floor: 0.30
+    ceiling: 0.72
+
+  score_margin:
+    floor: 0.00
+    ceiling: 0.18
+
+  support_count:
+    # Number of above-threshold chunks needed for full credit.
+    target: 3
+
+  grounding:
+    # Score awarded per verdict from the grounding critic.
+    #
+    # `partial` is deliberately well below the midpoint. A partial verdict
+    # means the model added detail the excerpts do not contain — which is
+    # precisely what fabrication looks like in this domain. Observed case:
+    # asked whether chickens were allowed, the draft asserted the Building
+    # Department "handles regulations for accessory structures and animals";
+    # "and animals" appeared in no source. At 0.5 that answer passed as HIGH
+    # confidence. At 0.3 it falls to a clarification instead.
+    supported: 1.0
+    partial: 0.3
+    unsupported: 0.0
+    # If the critic itself fails (model down, unparseable output), use this
+    # neutral-pessimistic value rather than assuming success.
+    error_default: 0.35
+
+# --- Hard safety overrides ----------------------------------------------------
+# If a question matches any pattern below, the answer is FORCED to low
+# confidence and escalated, no matter how good retrieval looked. These are
+# categories where a wrong municipal answer causes real harm — legal exposure,
+# financial loss, or a resident acting on bad information.
+policy_restrictions:
+  - id: legal_advice
+    reason: Requires interpretation of law by a qualified person.
+    # NOTE: use the bare noun ("lawyer"), not a possessive ("my lawyer").
+    # "Do I need a lawyer for this?" slipped past the possessive-only list and
+    # was handled as an ordinary question — exactly the wrong outcome.
+    patterns: [can i sue, sue the, lawsuit, legal advice, legal action, lawyer,
+               attorney, litigation, am i liable, liability, court case,
+               subpoena, take me to court, small claims, damages]
+
+  - id: code_interpretation
+    reason: Code interpretation is a Building Department determination, not an FAQ.
+    patterns: [is it legal to, am i allowed to build, does the code allow,
+               will i be grandfathered, grandfathered, nonconforming,
+               interpret the code, code says i can, zoning allow]
+
+  - id: individual_account
+    reason: Requires access to a specific resident's account or property record.
+    patterns: [my balance, my account, how much do i owe, my bill amount,
+               my tax bill, my assessment, my permit status, my application
+               status, my case, my ticket number, look up my]
+
+  - id: emergency
+    reason: Emergencies must go to 911 or the emergency line, never an AI.
+    patterns: [emergency, urgent, right now, gas leak, fire, flooding my house,
+               someone is hurt, injured, ambulance, police now, break in,
+               downed power line, live wire, carbon monoxide]
+    # Emergencies bypass normal escalation and show the safety notice instead.
+    immediate_safety_notice: true
+
+  - id: personnel_or_political
+    reason: Opinions on staff or elected officials are not the AI's role.
+    patterns: [who should i vote for, is the mayor, complaint about an employee,
+               fire the, incompetent, corrupt, lawsuit against the village]
+
+# --- Refusal language ---------------------------------------------------------
+# The exact wording used when the system declines to answer (§32).
+# Kept here so Village communications staff can adjust tone without a deploy.
+messages:
+  low_confidence: >-
+    I don't have enough verified information to answer that accurately.
+    I can connect you with the {department} so someone there can help.
+
+  policy_restricted: >-
+    That's something I need to hand off to a person — {reason}
+    Let me connect you with the {department}.
+
+  emergency: >-
+    If this is an emergency, please hang up and dial 911 right away.
+    For non-emergencies, I can connect you with the {department}.
+
+  clarification_preamble: >-
+    I want to make sure I give you accurate information.
+
+  no_knowledge_base: >-
+    My knowledge base isn't loaded right now, so I can't look that up.
+    I can connect you with the {department}.

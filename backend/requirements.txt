@@ -1,0 +1,44 @@
+# Garden City AI Receptionist — backend dependencies
+# All free / open-source. No PyTorch: faster-whisper uses CTranslate2,
+# Piper uses onnxruntime, and embeddings are served by Ollama.
+
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+
+# --- Database (SQLite now, Postgres via DATABASE_URL later) ---
+SQLAlchemy[asyncio]==2.0.36
+aiosqlite==0.20.0
+greenlet==3.1.1
+
+# --- RAG ---
+llama-index-core==0.12.10
+llama-index-vector-stores-qdrant==0.4.2
+llama-index-embeddings-ollama==0.5.0
+llama-index-llms-ollama==0.5.0
+qdrant-client==1.12.2
+
+# --- HTTP ---
+httpx==0.27.2
+
+# --- Voice ---
+faster-whisper==1.1.1
+# Kokoro: natural-sounding local TTS (Apache-2.0, 82M params). Default engine.
+kokoro-onnx==0.5.0
+soundfile==0.13.1
+# Piper: faster but more robotic. Kept as the first fallback.
+piper-tts==1.6.0
+
+# --- Document ingestion ---
+beautifulsoup4==4.12.3
+lxml==5.3.0
+pypdf==5.1.0
+markdownify==0.14.1
+PyYAML==6.0.2
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.25.2

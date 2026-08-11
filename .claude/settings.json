@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(backend/.venv/bin/python -c ' *)",
+      "Bash(npm run *)",
+      "Bash(../backend/.venv/bin/python -m pytest -q -p no:cacheprovider)",
+      "Bash(python3 -)",
+      "Bash(npx tsc *)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(grep -E '\\\\.env$|node_modules|\\\\.venv|\\\\.onnx|\\\\.bin$|gardencity\\\\.db|_crawled')",
+      "Bash(awk '{a+=$1} END {print a\" lines added\"}')",
+      "Bash(awk '{print $2}')"
+    ]
+  }
+}

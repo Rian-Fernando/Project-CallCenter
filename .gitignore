@@ -35,3 +35,9 @@ knowledge/_crawled/
 .DS_Store
 .idea/
 .vscode/
+# Added by the Vercel CLI.
+.vercel
+.env*
+# ...but .env.example documents every setting and MUST stay in the repo,
+# otherwise a fresh clone has no way to know what to configure.
+!.env.example

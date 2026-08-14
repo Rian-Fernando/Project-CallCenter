@@ -107,7 +107,26 @@ _RULES: list[tuple[re.Pattern[str], object]] = [
     # Phone numbers BEFORE the range rule below, or "516-465-4051" becomes
     # "516 to 465 to 4051". Spoken digit by digit — a caller writing a number
     # down needs "five one six", not "five hundred sixteen".
-    (re.compile(r"\b(\d{3})[-.\s](\d{3})[-.\s](\d{4})\b"), _phone),
+    #
+    # Must tolerate every shape the model produces. An earlier version required
+    # a separator straight after the area code, so "(516) 465-4020" never
+    # matched — the ")" was not in the class — and it was read aloud as
+    # "five hundred sixteen, four hundred sixty five".
+    # Leading country code first, or the general rule below consumes the
+    # 10-digit tail and leaves a stray "1-" for the range rule to turn into
+    # "1 to".
+    (re.compile(
+        r"\b1[-.\s]+(?:\((\d{3})\)|(\d{3}))[-.\s]*(\d{3})[-.\s]+(\d{4})\b"
+    ), lambda m: "one, " + _digits(m.group(1) or m.group(2)) + ", "
+                 + _digits(m.group(3)) + ", " + _digits(m.group(4))),
+
+    # Whitespace is only permitted INSIDE the parentheses. Allowing it before
+    # the area code let the pattern swallow the preceding space, so
+    # "Call 516-465-4031" was rendered "Callfive one six...".
+    (re.compile(
+        r"(?:\(\s*(\d{3})\s*\)|\b(\d{3}))[-.\s]*(\d{3})[-.\s]+(\d{4})\b"
+    ), lambda m: _digits(m.group(1) or m.group(2)) + ", "
+                 + _digits(m.group(3)) + ", " + _digits(m.group(4))),
     # Extensions and 4-5 digit internal numbers, same reasoning.
     (re.compile(r"\b(?:ext|extension)\.?\s*(\d{3,5})\b", re.IGNORECASE), _extension),
 

@@ -117,6 +117,23 @@ def _parse_frontmatter(text: str) -> tuple[dict, str]:
     return (meta if isinstance(meta, dict) else {}), text[match.end():]
 
 
+def _sidecar_meta(path: Path) -> dict:
+    """Read `<file>.meta.json` if present.
+
+    Markdown carries front matter, but PDFs and HTML cannot. Without a sidecar
+    an official Village PDF would default to `is_official: false` and be
+    labeled DEMO DATA — wrong, and it would undercut a real citation.
+    """
+    sidecar = path.with_suffix(path.suffix + ".meta.json")
+    if not sidecar.exists():
+        return {}
+    try:
+        return json.loads(sidecar.read_text(encoding="utf-8")) or {}
+    except Exception as exc:
+        log.warning("Could not read %s: %s", sidecar.name, exc)
+        return {}
+
+
 def _department_for(path: Path, root: Path) -> str:
     registry = get_departments()
     try:
@@ -214,17 +231,20 @@ def load_knowledge_dir(root: Path | None = None) -> list[SourceDocument]:
         suffix = path.suffix.lower()
 
         try:
+            if path.name.endswith(".meta.json"):
+                continue  # sidecar metadata, not a document
             if suffix == ".json":
                 docs.extend(_read_faq_json(path, department))
                 continue
 
             if suffix == ".pdf":
-                title, raw = path.stem.replace("_", " ").title(), _read_pdf(path)
-                meta: dict = {}
+                meta = _sidecar_meta(path)
+                raw = _read_pdf(path)
+                title = meta.get("title") or path.stem.replace("_", " ").replace("-", " ").title()
             elif suffix in {".html", ".htm"}:
+                meta = _sidecar_meta(path)
                 title, raw = _read_html(path)
-                title = title or path.stem.replace("_", " ").title()
-                meta = {}
+                title = meta.get("title") or title or path.stem.replace("_", " ").title()
             else:
                 content = path.read_text(encoding="utf-8", errors="replace")
                 meta, raw = _parse_frontmatter(content)
@@ -232,6 +252,13 @@ def load_knowledge_dir(root: Path | None = None) -> list[SourceDocument]:
                     path.stem.replace("_", " ").replace("-", " ").title()
         except Exception as exc:
             log.warning("Skipping %s: %s", path.name, exc)
+            continue
+
+        # A sidecar may declare a file citable-but-not-indexed. Dense reference
+        # PDFs are the case this exists for: they are the authority a curated
+        # extract points at, but indexing them buries the extract.
+        if meta.get("index") is False:
+            log.info("Skipping %s (sidecar sets index: false)", path.name)
             continue
 
         text = clean_text(raw)

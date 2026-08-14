@@ -38,10 +38,16 @@ class SourceDocument:
     def doc_id(self) -> str:
         """Stable id derived from identity, not content.
 
-        Deriving this from URL/path rather than text means re-ingesting an
-        edited page replaces its chunks instead of duplicating them.
+        Deriving this from path/URL rather than text means re-ingesting an
+        edited document replaces its chunks instead of duplicating them.
+
+        Path takes priority over URL. Two distinct local files may legitimately
+        cite the SAME official source — a dense PDF and a hand-written extract
+        of its key facts, for instance. Keying on the URL made them collide, and
+        dedup silently dropped one, which is a very quiet way to lose a document
+        from the knowledge base.
         """
-        seed = self.source_url or self.source_path or f"{self.department}/{self.title}"
+        seed = self.source_path or self.source_url or f"{self.department}/{self.title}"
         return hashlib.sha256(seed.encode("utf-8")).hexdigest()[:20]
 
     @property

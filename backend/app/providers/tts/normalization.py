@@ -32,23 +32,35 @@ def _two_digit_words(n: int) -> str:
 
 
 def _time(match: re.Match) -> str:
+    """Render a clock time the way a person says it out loud.
+
+    "6:00 a.m." becomes "six in the morning", not "six A M". Spelled-out
+    meridiems sound clinical over the phone, and a resident half-listening
+    parses "in the morning" far more reliably than two spoken letters.
+    """
     hour = int(match.group("h"))
     minute = int(match.group("m"))
-    meridiem = (match.group("ap") or "").replace(".", "").upper()
+    meridiem = (match.group("ap") or "").replace(".", "").replace(" ", "").upper()
+
+    # Noon and midnight have their own words; "twelve P M" is needlessly formal.
+    if meridiem and minute == 0 and hour == 12:
+        return "noon" if meridiem.startswith("P") else "midnight"
 
     if minute == 0:
-        spoken = f"{ONES[hour] if hour < 20 else hour} o'clock" if not meridiem \
-            else f"{ONES[hour] if hour < 20 else hour}"
+        clock = ONES[hour] if hour < 20 else str(hour)
     elif minute < 10:
-        # "6:05" is said "six oh five", not "six five".
-        spoken = f"{ONES[hour] if hour < 20 else hour} oh {ONES[minute]}"
+        # "6:05" is "six oh five", never "six five".
+        clock = f"{ONES[hour] if hour < 20 else hour} oh {ONES[minute]}"
     else:
-        spoken = f"{ONES[hour] if hour < 20 else hour} {_two_digit_words(minute)}"
+        clock = f"{ONES[hour] if hour < 20 else hour} {_two_digit_words(minute)}"
 
-    if meridiem:
-        # Spaced so the engine says the letters rather than a word.
-        spoken += " A M" if meridiem.startswith("A") else " P M"
-    return spoken
+    if not meridiem:
+        return f"{clock} o'clock" if minute == 0 else clock
+
+    if meridiem.startswith("A"):
+        return f"{clock} in the morning"
+    # 12-4 pm reads as afternoon; 5 pm onward as evening.
+    return f"{clock} in the {'afternoon' if hour == 12 or hour < 5 else 'evening'}"
 
 
 def _digits(text: str) -> str:

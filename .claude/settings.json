@@ -22,7 +22,9 @@
       "Bash(vm_stat)",
       "Bash(awk '/free/{f=$3} /inactive/{i=$3} END {gsub\\(/\\\\./,\"\",f\\); gsub\\(/\\\\./,\"\",i\\); printf \"  ~%.1f GB available\\\\n\", \\(f+i\\)*16384/1073741824}')",
       "Bash(./scripts/preflight.sh)",
-      "Bash(git commit -q -m 'Make dev.sh reclaim its own ports; add preflight and stop scripts' -m 'Re-running dev.sh failed with '\\\\''Address already in use'\\\\'' when an earlier run *)"
+      "Bash(git commit -q -m 'Make dev.sh reclaim its own ports; add preflight and stop scripts' -m 'Re-running dev.sh failed with '\\\\''Address already in use'\\\\'' when an earlier run *)",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s 'http://127.0.0.1:8000/api/knowledge/documents?department=sanitation')"
     ]
   }
 }

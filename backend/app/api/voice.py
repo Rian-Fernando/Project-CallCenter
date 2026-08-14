@@ -21,6 +21,7 @@ from app.models.schemas import (
     ChatRequest, SynthesisRequest, TranscriptionResponse,
 )
 from app.providers.factory import registry
+from app.providers.tts.normalization import normalize_for_speech
 from app.services.conversation import conversation_service
 
 log = logging.getLogger(__name__)
@@ -61,7 +62,11 @@ async def synthesize(request: SynthesisRequest):
     `client_side_fallback: true` instead, and the browser should speak the text
     with the Web Speech API. Callers must check the content type.
     """
-    result = await registry.tts.synthesize(request.text, voice=request.voice)
+    # Normalize on the way into the engine only. The transcript on screen
+    # keeps the original text, because "6:00 a.m." is what a resident should
+    # read even though "six A M" is what they should hear.
+    spoken = normalize_for_speech(request.text)
+    result = await registry.tts.synthesize(spoken, voice=request.voice)
 
     if result.client_side_fallback:
         return Response(

@@ -12,7 +12,15 @@
       "Bash(grep -E '\\\\.env$|node_modules|\\\\.venv|\\\\.onnx|\\\\.bin$|gardencity\\\\.db|_crawled')",
       "Bash(awk '{a+=$1} END {print a\" lines added\"}')",
       "Bash(awk '{print $2}')",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(vercel env *)",
+      "Bash(../backend/.venv/bin/python -c ' *)",
+      "Bash(curl -s http://localhost:11434/api/ps)",
+      "Bash(memory_pressure)",
+      "Bash(sort -k3 -rn)",
+      "Bash(awk '{printf \"  %5s%%CPU %6s%%MEM  %s\\\\n\", $3, $4, substr\\($11,1,60\\)}')",
+      "Bash(vm_stat)",
+      "Bash(awk '/free/{f=$3} /inactive/{i=$3} END {gsub\\(/\\\\./,\"\",f\\); gsub\\(/\\\\./,\"\",i\\); printf \"  ~%.1f GB available\\\\n\", \\(f+i\\)*16384/1073741824}')"
     ]
   }
 }

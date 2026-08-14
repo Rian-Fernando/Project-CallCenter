@@ -32,12 +32,16 @@ require_login() {
 tunnel_id() {
   cloudflared tunnel list --output json 2>/dev/null \
     | python3 -c "
-import json,sys
-try: rows = json.load(sys.stdin)
-except Exception: sys.exit(0)
-for r in rows:
+import json, sys
+try:
+    rows = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+# 'tunnel list' prints null (not []) when no tunnels exist yet.
+for r in (rows or []):
     if r.get('name') == '$TUNNEL_NAME':
-        print(r['id']); break
+        print(r['id'])
+        break
 "
 }
 

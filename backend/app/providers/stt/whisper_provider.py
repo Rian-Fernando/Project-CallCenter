@@ -49,7 +49,11 @@ DOMAIN_PROMPT = (
     "Avenue. Streets include Rockaway Avenue, Stewart Avenue, Franklin Avenue, "
     "Nassau Boulevard, Clinton Road, Cherry Valley Avenue and Hempstead "
     "Turnpike. They may mention Nassau County, the Town of Hempstead, "
-    "Village Hall, Public Works, or the Building Department."
+    "Village Hall, Public Works, or the Building Department. Typical questions "
+    "are: Who handles gardening? Who do I call about a pothole? What day is my "
+    "trash picked up? How do I get a permit? What is the phone number for the "
+    "Building Department? When does the pool open? Who handles leaf pickup, "
+    "yard waste, landscaping, tree trimming and snow removal?"
 )
 
 

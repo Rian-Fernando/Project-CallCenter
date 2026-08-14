@@ -9,11 +9,13 @@
 #   2. The LLM only runs when the rules are ambiguous (no match, or two
 #      departments tie). This keeps voice latency low and behavior explainable.
 #
-# IMPORTANT — CONTACT INFORMATION:
-#   `phone` and `email` are intentionally left null. Do NOT populate them with
-#   guessed values. Fill them in only from the official Village directory at
-#   https://www.gardencityny.net. The UI renders "see Village directory" while
-#   these are null, which is correct behavior for an unverified prototype.
+# CONTACT INFORMATION:
+#   Phone numbers below were taken from the Village's own public directory at
+#   https://www.gardencityny.net/Directory.aspx. They are NOT guessed.
+#   Village staff should still confirm them before any real deployment —
+#   directories go stale, and a wrong number is worse than none.
+#
+#   `email` remains null. Do not populate it with guessed values.
 # =============================================================================
 
 departments:
@@ -22,7 +24,7 @@ departments:
     description: >-
       Village Hall hours, general contact information, meetings, questions that
       span multiple departments, or anything not clearly owned elsewhere.
-    phone: null
+    phone: "516-465-4000"
     email: null
     name_keywords: [village hall, village of garden city, general information]
     keywords: [village hall, hours, open, closed, holiday, mayor, trustee,
@@ -35,7 +37,7 @@ departments:
     description: >-
       Streets, roads, potholes, snow removal, street lights, traffic signs,
       trees, sidewalks, storm drains, sewers, water mains, village vehicles.
-    phone: null
+    phone: "516-465-4003"
     email: null
     name_keywords: [public works, department of public works, dpw, highway division, engineering division, street lighting, municipal service yard, central garage, water and sewer, water sewer]
     keywords: [pothole, road, street, pavement, repave, asphalt, snow, plow,
@@ -50,7 +52,7 @@ departments:
     description: >-
       Parks, pool, tennis courts, athletic fields, community programs, camps,
       senior activities, facility reservations, recreation memberships.
-    phone: null
+    phone: "516-465-4075"
     email: null
     name_keywords: [recreation, recreation and parks, recreation parks, cultural and recreational affairs, senior center, garden city pool]
     # NOTE: "court" alone is deliberately excluded — it collides with Justice
@@ -67,7 +69,7 @@ departments:
     description: >-
       Construction permits, inspections, certificates of occupancy, zoning,
       variances, code enforcement, fences, sheds, decks, pools, additions.
-    phone: null
+    phone: "516-465-4040"
     email: null
     name_keywords: [building department, building dept, building division, zoning board of appeals, planning commission, architectural design review, code enforcement]
     keywords: [building permit, construction, contractor, inspection, inspector,
@@ -82,7 +84,7 @@ departments:
     description: >-
       Vital records, licenses, FOIL/public records requests, voter registration,
       local laws, official documents, notary, village elections.
-    phone: null
+    phone: "516-465-4000"
     email: null
     name_keywords: [village clerk, clerk's office, clerks office, administrator village clerk, business clerk, records access]
     keywords: [clerk, birth certificate, death certificate, marriage license,
@@ -96,7 +98,7 @@ departments:
     description: >-
       Property taxes, water bills, village invoices, payments, assessments,
       budget documents, refunds.
-    phone: null
+    phone: "516-465-4166"
     email: null
     name_keywords: [finance department, finance dept, village treasurer, tax and water bills, assessment roll, village budget]
     keywords: [tax, taxes, property tax, tax bill, assessment, assessed value,
@@ -110,7 +112,7 @@ departments:
     description: >-
       Garbage and refuse collection, recycling, yard waste, bulk pickup,
       collection schedules, missed pickups, containers.
-    phone: null
+    phone: "516-465-4031"
     email: null
     name_keywords: [sanitation, sanitation division, recycling, refuse collection]
     keywords: [garbage, trash, refuse, rubbish, waste, pickup, pick up,
@@ -125,7 +127,7 @@ departments:
     description: >-
       Parking permits, meters, parking fields and lots, commuter parking,
       parking tickets and violations, overnight parking rules.
-    phone: null
+    phone: "516-465-4000"
     email: null
     name_keywords: [parking, parking permit, parking field, railroad parking]
     keywords: [parking, park my car, permit parking, parking permit, meter,
@@ -140,7 +142,7 @@ departments:
     description: >-
       Non-construction permits: block parties, street closures, film shoots,
       special events, dumpster and pod placement, tag sales, peddler licenses.
-    phone: null
+    phone: "516-465-4000"
     email: null
     name_keywords: [special event permit, block party permit, peddler license]
     keywords: [permit, special event, block party, street closure, road closure,

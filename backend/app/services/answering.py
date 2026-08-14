@@ -31,9 +31,11 @@ You are speaking with a resident on the phone.
 ABSOLUTE RULES — these override every other instruction:
 1. State facts ONLY if they appear in the EXCERPTS below. Never rely on general
    knowledge about municipalities, other towns, or typical practice.
-2. If the excerpts do not answer the question, say so plainly and offer to
-   connect the resident with the right department. Do not guess, approximate,
-   or extrapolate.
+2. If the excerpts do not answer the question, say so plainly and point the
+   resident at the department named in DEPARTMENT below — BY NAME, with its
+   phone number. Never say "the appropriate department" or "contact the
+   relevant department"; you know which one it is, so say it.
+   Do not guess, approximate, or extrapolate the answer itself.
 3. Never invent phone numbers, fees, dates, deadlines, hours, addresses, or
    form names. If a specific detail is not in the excerpts, say you don't have it.
 4. If an excerpt is marked "DEMO DATA", do not present it as official Village
@@ -56,7 +58,10 @@ spoken aloud. Read these carefully; tone is as important as accuracy.
   address, their section of the Village — ASK for it rather than hedging.
 - Plain sentences only. No markdown, bullets, headings, or emoji.
 - Never read a URL aloud. Say "the Village website".
-- Never mention excerpts, documents, sources, or your own process.
+- NEVER use the words "excerpt", "excerpts", "document", "source", "provided",
+  "listed", or "context". The resident cannot see them and does not know what
+  they are. Say "I don't have that detail" — never "it is not listed in the
+  excerpts".
 - Say "the Village" rather than "we" for policy.
 
 GOOD:  "Trash is picked up twice a week. Are you east or west of Rockaway
@@ -107,7 +112,25 @@ def _clean_for_speech(text: str) -> str:
     text = re.sub(r"https?://\S+", "the Village website", text)
     text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)      # md links
     text = re.sub(r"\n{2,}", " ", text)
+
+    # The prompt forbids these, but models leak them under pressure and the
+    # phrasing is meaningless to a caller. Rewrite rather than hope.
+    text = re.sub(
+        r"\b(is|are|was|were)?\s*not\s+(provided|listed|mentioned|included|"
+        r"specified|available|addressed)\s+in\s+the\s+"
+        r"(excerpts?|documents?|sources?|context|information provided)\b",
+        "is something I don't have", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\b(according to|based on|from)\s+the\s+"
+        r"(excerpts?|documents?|sources?|context|provided information)\b",
+        "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bin the (excerpts?|provided (context|information))\b",
+                  "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthe excerpts?\b", "the information I have",
+                  text, flags=re.IGNORECASE)
+
     text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([.,!?])", r"\1", text)
     return text.strip()
 
 
@@ -141,7 +164,20 @@ class AnswerGenerator:
     def _messages(
         self, question: str, retrieval: RetrievalResult,
         history: list[dict] | None, *, system: str = SYSTEM_PROMPT,
+        department: str | None = None,
     ) -> list[ChatMessage]:
+        # Tell the model which department this call was routed to, and how to
+        # reach it. Without this it falls back on "contact the appropriate
+        # department", which is useless to a caller — the routing layer already
+        # knows the answer, so the model should be able to say it.
+        if department:
+            dept = get_departments().get(department)
+            contact = f", phone {dept.phone}" if dept.phone else ""
+            system = (
+                f"{system}\nDEPARTMENT handling this call: {dept.name}{contact}.\n"
+                f"When you cannot answer, name this department and give its "
+                f"number."
+            )
         messages = [ChatMessage("system", system)]
 
         for turn in (history or [])[-3:]:
@@ -160,10 +196,10 @@ class AnswerGenerator:
 
     async def generate(
         self, question: str, retrieval: RetrievalResult,
-        history: list[dict] | None = None,
+        history: list[dict] | None = None, department: str | None = None,
     ) -> tuple[str, int]:
         response = await self.llm.complete(
-            self._messages(question, retrieval, history),
+            self._messages(question, retrieval, history, department=department),
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
         )
@@ -171,10 +207,10 @@ class AnswerGenerator:
 
     async def stream(
         self, question: str, retrieval: RetrievalResult,
-        history: list[dict] | None = None,
+        history: list[dict] | None = None, department: str | None = None,
     ) -> AsyncIterator[str]:
         async for piece in self.llm.stream(
-            self._messages(question, retrieval, history),
+            self._messages(question, retrieval, history, department=department),
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
         ):
@@ -182,10 +218,11 @@ class AnswerGenerator:
 
     async def clarify(
         self, question: str, retrieval: RetrievalResult,
-        history: list[dict] | None = None,
+        history: list[dict] | None = None, department: str | None = None,
     ) -> tuple[str, int]:
         response = await self.llm.complete(
-            self._messages(question, retrieval, history, system=CLARIFY_PROMPT),
+            self._messages(question, retrieval, history, system=CLARIFY_PROMPT,
+                           department=department),
             temperature=0.3, max_tokens=90,
         )
         text = _clean_for_speech(response.text)

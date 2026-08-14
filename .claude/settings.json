@@ -26,7 +26,8 @@
       "Bash(python3 -c ' *)",
       "Bash(curl -s 'http://127.0.0.1:8000/api/knowledge/documents?department=sanitation')",
       "Bash(git commit -q -m 'Document the address-aware answer path and its privacy trade-off' -m 'Location-dependent answers already work through a clarifying question: *)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/api/health/live)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/api/health/live)",
+      "Bash(sed -i '' 's/    phone: \\\\\\\\\"\\\\\\(.*\\\\\\)\\\\\\\\\"/    phone: \"\\\\1\"/' config/departments.yaml)"
     ]
   }
 }

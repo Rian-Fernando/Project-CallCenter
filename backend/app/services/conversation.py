@@ -37,6 +37,7 @@ from app.routing.router import router
 from app.services.answering import answer_generator
 from app.services.confidence import Action, confidence_engine
 from app.services.memory import Session, Turn, session_store
+from app.services.contact_lookup import contact_answer
 from app.services.smalltalk import (
     SmalltalkMatch, match_smalltalk, match_topic_announcement, topic_reply,
 )
@@ -142,6 +143,15 @@ class ConversationService:
                 session, question, topic, decision, timings, started,
             )
 
+        # "What's the number for Public Works?" has one right answer and it is
+        # already configured. Sending it through retrieval let a mediocre
+        # similarity score downgrade a known fact into a clarifying question.
+        if (contact := contact_answer(question, decision.department)) is not None:
+            return await self._direct_turn(
+                session, question, contact, decision, timings, started,
+                intent_suffix="contact_lookup",
+            )
+
         # --- retrieve ------------------------------------------------------
         t0 = time.perf_counter()
         retrieval = await retriever.retrieve(
@@ -170,6 +180,7 @@ class ConversationService:
             try:
                 draft, llm_ms = await answer_generator.generate(
                     question, retrieval, history,
+                    department=decision.department,
                 )
             except Exception as exc:
                 log.error("Answer generation failed: %s", exc)
@@ -195,6 +206,7 @@ class ConversationService:
             try:
                 answer, extra_ms = await answer_generator.clarify(
                     question, retrieval, history,
+                    department=decision.department,
                 )
                 timings["llm_ms"] = timings.get("llm_ms", 0) + extra_ms
             except Exception as exc:
@@ -306,6 +318,20 @@ class ConversationService:
             decision.department = session.current_department
             decision.method = f"{decision.method}+session_context"
 
+        if (contact := contact_answer(question, decision.department)) is not None:
+            result = await self._direct_turn(
+                session, question, contact, decision, timings, started,
+                intent_suffix="contact_lookup",
+            )
+            yield {"type": "meta", "data": {
+                "session_id": session_id, "department": result.department,
+                "department_name": result.department_name,
+                "sources": [], "will_stream": False,
+            }}
+            yield {"type": "delta", "data": {"text": result.answer}}
+            yield {"type": "done", "data": result.as_dict()}
+            return
+
         if (topic := match_topic_announcement(question)) is not None:
             result = await self._topic_turn(
                 session, question, topic, decision, timings, started,
@@ -353,7 +379,9 @@ class ConversationService:
         t0 = time.perf_counter()
         pieces: list[str] = []
         try:
-            async for piece in answer_generator.stream(question, retrieval, history):
+            async for piece in answer_generator.stream(
+                question, retrieval, history, department=decision.department,
+            ):
                 pieces.append(piece)
                 yield {"type": "delta", "data": {"text": piece}}
         except Exception as exc:
@@ -415,6 +443,73 @@ class ConversationService:
         # correction should be shown.
         payload["grounding_failed"] = grounding_failed
         yield {"type": "done", "data": payload}
+
+    # ------------------------------------------------------------------
+    async def _direct_turn(
+        self, session: Session, question: str, answer: str,
+        decision, timings: dict, started: float,
+        *, intent_suffix: str, action: str = Action.ANSWER.value,
+    ) -> TurnResult:
+        """Persist a deterministic answer that bypassed retrieval.
+
+        Used where the correct response is already known — a configured
+        department phone number, for instance — so no similarity score can
+        turn it into a hedge.
+        """
+        department_name = get_departments().name_of(decision.department)
+        timings["total_ms"] = int((time.perf_counter() - started) * 1000)
+
+        turn = Turn(
+            user=question, assistant=answer,
+            department=decision.department,
+            intent=f"{decision.department}_{intent_suffix}",
+            confidence=1.0, action=action, sources=[],
+        )
+        session.add_turn(turn)
+
+        async with session_scope() as db:
+            conversation = None
+            if session.conversation_id:
+                conversation = await db.get(Conversation, session.conversation_id)
+            if conversation is None:
+                conversation = Conversation(
+                    session_id=session.session_id, channel=session.channel,
+                )
+                db.add(conversation)
+                await db.flush()
+                session.conversation_id = conversation.id
+
+            turn_row = TurnRow(
+                conversation_id=conversation.id,
+                turn_index=len(session.turns) - 1,
+                user_text=question, assistant_text=answer,
+                department=decision.department, intent=turn.intent,
+                routing_method=decision.method,
+                routing_confidence=decision.confidence,
+                confidence_score=1.0,
+                confidence_level=ConfidenceLevel.HIGH.value,
+                confidence_signals={"deterministic": intent_suffix,
+                                    "pipeline_skipped": True},
+                sources=[], retrieved_count=0,
+                response_ms=timings["total_ms"], action=action,
+            )
+            db.add(turn_row)
+            await db.flush()
+            conversation.turn_count = len(session.turns)
+            conversation.primary_department = decision.department
+            conversation_id, turn_id = conversation.id, turn_row.id
+
+        return TurnResult(
+            session_id=session.session_id,
+            conversation_id=conversation_id, turn_id=turn_id,
+            answer=answer, action=action,
+            department=decision.department, department_name=department_name,
+            intent=turn.intent, confidence=1.0,
+            confidence_level=ConfidenceLevel.HIGH.value,
+            confidence_signals={"deterministic": intent_suffix,
+                                "pipeline_skipped": True},
+            routing=decision.as_dict(), sources=[], timings=timings,
+        )
 
     # ------------------------------------------------------------------
     async def _topic_turn(

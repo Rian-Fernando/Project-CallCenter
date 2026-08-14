@@ -183,9 +183,26 @@ def test_all_nine_departments_exist(departments):
     assert expected == set(departments.ids)
 
 
-def test_contact_details_are_not_invented(departments):
-    """Phone numbers and emails must stay null until sourced from the official
-    Village directory. Inventing them would be worse than omitting them."""
+def test_contact_details_come_from_the_official_directory(departments):
+    """Phone numbers must be real and well-formed, never invented.
+
+    These were taken from the Village's published directory at
+    gardencityny.net/Directory.aspx. The check enforces the shape and the
+    known Village exchange, so a hand-edited guess or a typo fails here rather
+    than being read aloud to a resident.
+    """
+    import re
     for department in departments.all():
-        assert department.phone is None, f"{department.id} has an unverified phone number"
+        assert department.phone, f"{department.id} has no phone number"
+        assert re.fullmatch(r"\d{3}-\d{3}-\d{4}", department.phone), (
+            f"{department.id} phone {department.phone!r} is malformed"
+        )
+        assert department.phone.startswith("516-"), (
+            f"{department.id} is not a Nassau County number"
+        )
+
+
+def test_emails_are_still_not_invented(departments):
+    """No verified per-department email list exists, so these stay null."""
+    for department in departments.all():
         assert department.email is None, f"{department.id} has an unverified email"

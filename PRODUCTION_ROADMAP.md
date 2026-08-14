@@ -125,6 +125,32 @@ residency work in the security roadmap.
 Skipping this is the most likely way for a technically sound system to fail in
 production.
 
+### Phase 2b — Address-aware answers (1–2 weeks, needs Village data)
+
+Some answers depend on where the caller lives. Garbage collection is the clear
+case: Mondays and Thursdays west of Rockaway Avenue, Tuesdays and Fridays east.
+
+**What works today:** the assistant asks which side of Rockaway Avenue the
+caller is on, remembers it for the call, and applies it to follow-up questions.
+No address is requested and none is stored.
+
+**What full address support would require:**
+
+1. A **street-to-section mapping** from the Village — which streets fall in the
+   Western and Eastern halves. This is Village data; it must not be inferred.
+   A geocoder plus the boundary geometry is the alternative.
+2. A decision on **whether to collect addresses at all.** Asking for a street
+   address makes every call a PII matter: retention, FOIL exposure, breach
+   notification. Asking "which side of Rockaway Avenue?" reaches the same
+   answer while collecting nothing identifying.
+3. If addresses are collected, they should stay **in session memory only** and
+   never reach the database — the schema deliberately has nowhere to put them.
+
+**Recommendation:** keep the clarifying-question approach as the default and add
+street lookup only as a convenience, using a Village-supplied street list. The
+same pattern extends to other location-dependent answers — leaf collection
+zones, snow routes, street-sweeping days — once the Village provides the zones.
+
 ### Phase 3 — Production infrastructure (3–4 weeks)
 
 - Migrate to managed PostgreSQL with automated backups and tested restores

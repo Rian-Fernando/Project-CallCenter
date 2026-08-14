@@ -6,6 +6,24 @@ Everything you need to run the demo, plus what to say and what to expect.
 
 ## Before you start (do this 15 minutes early)
 
+### 0. Run the preflight check
+
+```bash
+./scripts/preflight.sh
+```
+
+Checks RAM, power, CPU load, Ollama, the backend, the knowledge base, the
+frontend, and the tunnel — then warms the models. Fix anything it flags before
+going further. If it passes, you are ready.
+
+Other useful commands:
+
+```bash
+./scripts/dev.sh          # start backend + frontend (reclaims its own ports)
+./scripts/stop.sh         # stop everything cleanly
+./scripts/stop.sh --all   # also stop the tunnel
+```
+
 ### 1. Free up the machine — this matters most
 
 Local AI inference competes with everything else for CPU and RAM. During

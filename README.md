@@ -347,6 +347,7 @@ More detail in [SETUP_GUIDE.md](SETUP_GUIDE.md#troubleshooting).
 | [SETUP_GUIDE.md](SETUP_GUIDE.md) | 14 numbered steps, each with what to run, what you should see, and what to do if it fails |
 | [PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) | Free → production migration, component by component, with costs |
 | [SECURITY_ROADMAP.md](SECURITY_ROADMAP.md) | Everything required before real municipal callers |
+| [docs/CALL_PREP.md](docs/CALL_PREP.md) | Prep for a phone conversation with the Village: likely questions, GoGov realities, what to ask them |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploying the frontend to Vercel, with the backend tunnelled |
 | [docs/GOGOV_INTEGRATION.md](docs/GOGOV_INTEGRATION.md) | What GoGov would need to provide |
 | [docs/ASTERISK.md](docs/ASTERISK.md) | Optional telephony path |

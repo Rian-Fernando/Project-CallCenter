@@ -62,12 +62,15 @@ rubbish day.
 - Put material at the curb **by 6:00 a.m. on the day of collection**
 - **Not before 7:00 p.m.** the evening before
 
-## Garden City Recycling Center (Transfer Station)
+## Garden City Recycling Center hours — what time is it open?
 
-- **Address:** 2 Cherry Valley Avenue
-- **Open:** Monday–Friday 9:00 a.m. to 3:30 p.m.; Saturday 8:00 a.m. to 3:30 p.m.
-- **Closed daily:** 11:45 a.m. to 12:30 p.m.
-- **Phone:** (516) 465-4031
+The Garden City Recycling Center, also called the Municipal Service Yard or
+Transfer Station, is at 2 Cherry Valley Avenue.
+
+- **Weekdays, Monday to Friday:** open 9:00 a.m. to 3:30 p.m.
+- **Saturdays:** open 8:00 a.m. to 3:30 p.m.
+- **Closed every day** between 11:45 a.m. and 12:30 p.m.
+- **Phone:** 516-465-4031
 
 ## Hazardous materials
 

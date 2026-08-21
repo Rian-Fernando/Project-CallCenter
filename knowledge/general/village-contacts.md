@@ -1,5 +1,5 @@
 ---
-title: Village Department Phone Numbers and Contacts
+title: Village Department Phone Numbers, Contacts and Hours
 department: general
 is_official: true
 source_url: https://www.gardencityny.net/Directory.aspx
@@ -44,11 +44,25 @@ personal number is worse than a main line that always reaches someone.
 - **Parks, pool, tennis, camps, senior programs** — Recreation & Parks, 516-465-4075
 - **Parking tickets and court matters** — Justice Court, 516-465-4080
 
+## Hours of operation
+
+### Garden City Recycling Center / Municipal Service Yard
+Also called the Transfer Station. Located at 2 Cherry Valley Avenue.
+
+- **Weekdays (Monday to Friday):** 9:00 a.m. to 3:30 p.m.
+- **Saturdays:** 8:00 a.m. to 3:30 p.m.
+- **Closed daily** between 11:45 a.m. and 12:30 p.m.
+- **Phone:** 516-465-4031
+
+### Justice Court
+- 8:30 a.m. to 4:30 p.m., Monday through Friday
+- Phone for questions: 516-742-9886
+
 ## Water or sewer emergencies
 
 Leaks, turn-offs, and sewer backups:
-- **7:30 a.m. to midnight** — 516-465-4031
-- **After midnight** — Village Police, 516-465-4100
+- **7:30 a.m. to midnight**, seven days a week — 516-465-4020
+- **Midnight to 7:30 a.m.** — Village Police, 516-465-4100
 
 ## Landscaping, gardening and yard maintenance
 
